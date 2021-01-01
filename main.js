@@ -152,23 +152,23 @@ class Snake
 {
     constructor(x, y, size, color)
     {
-        var padding = 1;
+        this.padding = 3; // important for colition detection
 
         this.position = new Rect(
-            x + padding,
-            y + padding,
-            size - padding,
-            size - padding
+            x + this.padding,
+            y + this.padding,
+            size - this.padding * 2,
+            size - this.padding * 2
         );
         this.speed = new Point();
         this.speed_max = new Point(size, size);
         this.tail_size = 1;
         this.tail = [
             new Rect(
-                x + padding,
-                y + padding,
-                size - padding,
-                size - padding
+                this.position.x,
+                this.position.y,
+                this.position.h,
+                this.position.w
             )
         ];
         this.color = color;
@@ -183,6 +183,16 @@ class Snake
         this.direction = 0;
         this.is_grow_time = false;
         this.is_shrink_time = false;
+    }
+
+    get_future_head()
+    {
+        return new Rect(
+            this.position.x + this.speed.x,
+            this.position.y + this.speed.y,
+            this.position.h,
+            this.position.w
+        );
     }
 
     face_up()
@@ -238,6 +248,33 @@ class Snake
 
     update()
     {
+
+        if (this.is_grow_time)
+        {
+            var temp_body = new Rect(
+                this.position.x,
+                this.position.y,
+                this.position.h,
+                this.position.w
+            );
+            this.tail.push(temp_body);
+            this.tail_size += 1;
+            this.is_grow_time = false;
+        }
+        else if (this.is_shrink_time)
+        {
+            this.tail_size = 1;
+            this.tail = [
+                new Rect(
+                    this.position.x,
+                    this.position.y,
+                    this.position.h,
+                    this.position.w
+                )
+            ];
+            this.is_shrink_time = false;
+        }
+
         this.position.x += this.speed.x;
         this.position.y += this.speed.y;
 
@@ -251,33 +288,6 @@ class Snake
 
         this.speed.x = 0;
         this.speed.y = 0;
-    }
-
-    grow()
-    {
-        var temp_body = new Rect(
-            this.position.x,
-            this.position.y,
-            this.position.h,
-            this.position.w
-        );
-        this.tail.push(temp_body);
-        this.tail_size += 1;
-        this.is_grow_time = false;
-    }
-
-    shrink()
-    {
-        this.tail_size = 1;
-        this.tail = [
-            new Rect(
-                this.position.x,
-                this.position.y,
-                this.position.h,
-                this.position.w
-            )
-        ];
-        this.is_shrink_time = false;
     }
 
     draw(context)
@@ -300,7 +310,7 @@ var cell_size = 20;
 var screen = new Screen('can', "#000000");
 var input = new Input();
 
-var snake = new Snake(30, 200, cell_size, "#FF0000");
+var snake = new Snake(20, 200, cell_size, "#FF0000");
 var food  = new Food(100, 100, 2 * cell_size, "#FFFF00");
 
 var reference_frame = 0;
@@ -336,16 +346,6 @@ function loop(current_frame)
         }
     }
 
-
-    switch(snake.state){
-        case 0: snake.move_up();    break;
-        case 1: snake.move_down();  break;
-        case 2: snake.move_left();  break;
-        case 3: snake.move_right(); break;
-        case -1: break;
-    }
-
-
     // Colittion detection
 
     // Collition between food and head
@@ -356,7 +356,7 @@ function loop(current_frame)
     }
 
     // Collition between head and body
-    for (var i=0; i < snake.tail_size-1; i++)
+    for (var i=0; i < snake.tail_size - 1; i++)
     {
         if (check_rect_colition(snake.position, snake.tail[i]))
         {
@@ -365,28 +365,49 @@ function loop(current_frame)
         }
     }
 
+    // Colition between head and screen
+    var future_head = snake.get_future_head();
+    if (future_head.x + future_head.w + snake.padding > screen.w)
+    {
+        snake.position.x = snake.padding;
+        snake.tail[snake.tail_size - 1].x = snake.position.x;
+    }
+    else if (future_head.x - snake.padding < 0)
+    {
+        snake.position.x = screen.w - (snake.position.w + snake.padding);
+        snake.tail[snake.tail_size - 1].x = snake.position.x;
+    }
+
+    
+
+
+
     // Update objects
     var frame_delta = current_frame - reference_frame;
     if (frame_delta > frame_skip)
     {
-        if (snake.is_grow_time)
-        {
-            snake.grow();
-        }
-        else if (snake.is_shrink_time)
-        {
-            snake.shrink();
-        }
-        snake.update();
 
+        switch(snake.state){
+            case 0: snake.move_up();    break;
+            case 1: snake.move_down();  break;
+            case 2: snake.move_left();  break;
+            case 3: snake.move_right(); break;
+            case -1: break;
+        }
+    
         if (input.is_locked)
         {
             input.lock = false;
         }
         reference_frame = current_frame;
     }
+    else
+    {
+        snake.speed.x = 0;
+        snake.speed.y = 0;
+    }
 
-
+    snake.update();
     // Render
     screen.clear();
 
