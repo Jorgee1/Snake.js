@@ -181,6 +181,7 @@ class Snake
         this.right = 3;
 
         this.direction = 0;
+        this.is_grow_time = false;
     }
 
     face_up()
@@ -241,9 +242,11 @@ class Snake
 
         for (var i = 0; i < this.tail_size - 1; i++)
         {
-            this.tail[i] = this.tail[i+1];
+            this.tail[i].x = this.tail[i+1].x;
+            this.tail[i].y = this.tail[i+1].y;
         }
-        this.tail[this.tail_size - 1] = this.position;
+        this.tail[this.tail_size - 1].x = this.position.x;
+        this.tail[this.tail_size - 1].y = this.position.y;
 
         this.speed.x = 0;
         this.speed.y = 0;
@@ -251,7 +254,15 @@ class Snake
 
     grow()
     {
+        var temp_body = new Rect(
+            this.position.x,
+            this.position.y,
+            this.position.h,
+            this.position.w
+        );
+        this.tail.push(temp_body);
         this.tail_size += 1;
+        this.is_grow_time = false;
     }
 
     draw(context)
@@ -328,15 +339,20 @@ function loop(current_frame)
 
     if (check_rect_colition(snake.position, food.position))
     {
-        //snake.grow(); TODO: FIX
         food.respawn(screen.h, screen.w);
+        snake.is_grow_time = true;
     }
 
     // Update objects
     var frame_delta = current_frame - reference_frame;
     if (frame_delta > frame_skip)
     {
+        if (snake.is_grow_time)
+        {
+            snake.grow();
+        }
         snake.update();
+
         if (input.is_locked)
         {
             input.lock = false;
