@@ -1,4 +1,7 @@
 # Snake.js
 
+Snake implementation in Javascript.
 
-Test
+Movements is done with the W S A D keys
+
+Don't let the head touch the body,
