@@ -22,15 +22,15 @@ function check_rect_colition(A, B){
     if(
         (
             (
-                (A.x < B.x) && (A.x + A.w > B.x)
+                (A.x <= B.x) && (A.x + A.w >= B.x)
             ) || (
-                (A.x > B.x) && (B.x + B.w > A.x)
+                (A.x >= B.x) && (B.x + B.w >= A.x)
             )
         ) && (
             (
-                (A.y < B.y) && (A.y + A.h > B.y)
+                (A.y <= B.y) && (A.y + A.h >= B.y)
             ) || (
-                (A.y > B.y) && (B.y + B.h > A.y)
+                (A.y >= B.y) && (B.y + B.h >= A.y)
             )
         )
     ){
@@ -150,7 +150,7 @@ class Food
 
 class Snake
 {
-    constructor(x, y, size, tail_size, color)
+    constructor(x, y, size, color)
     {
         var padding = 1;
 
@@ -162,7 +162,7 @@ class Snake
         );
         this.speed = new Point();
         this.speed_max = new Point(size, size);
-        this.tail_size = tail_size;
+        this.tail_size = 1;
         this.tail = [
             new Rect(
                 x + padding,
@@ -182,6 +182,7 @@ class Snake
 
         this.direction = 0;
         this.is_grow_time = false;
+        this.is_shrink_time = false;
     }
 
     face_up()
@@ -265,11 +266,25 @@ class Snake
         this.is_grow_time = false;
     }
 
+    shrink()
+    {
+        this.tail_size = 1;
+        this.tail = [
+            new Rect(
+                this.position.x,
+                this.position.y,
+                this.position.h,
+                this.position.w
+            )
+        ];
+        this.is_shrink_time = false;
+    }
+
     draw(context)
     {
         context.fillStyle = this.color;
 
-        for (var i = 0; i < this.tail_size; i++)
+        for (var i = this.tail_size - 1; i >= 0; i--)
         {
             context.fillRect(
                 this.tail[i].x,
@@ -280,17 +295,13 @@ class Snake
         }
     }
 }
-var cell_size = 10;
+
+var cell_size = 20;
 var screen = new Screen('can', "#000000");
 var input = new Input();
-var snake = new Snake(
-    30, 200, cell_size,
-    1, "#FF0000"
-);
-var food = new Food(
-    100, 100, 2 * cell_size,
-    "#FFFF00"
-);
+
+var snake = new Snake(30, 200, cell_size, "#FF0000");
+var food  = new Food(100, 100, 2 * cell_size, "#FFFF00");
 
 var reference_frame = 0;
 var frame_skip = 3;
@@ -337,10 +348,21 @@ function loop(current_frame)
 
     // Colittion detection
 
+    // Collition between food and head
     if (check_rect_colition(snake.position, food.position))
     {
         food.respawn(screen.h, screen.w);
         snake.is_grow_time = true;
+    }
+
+    // Collition between head and body
+    for (var i=0; i < snake.tail_size-1; i++)
+    {
+        if (check_rect_colition(snake.position, snake.tail[i]))
+        {
+            snake.is_shrink_time = true;
+            break;
+        }
     }
 
     // Update objects
@@ -350,6 +372,10 @@ function loop(current_frame)
         if (snake.is_grow_time)
         {
             snake.grow();
+        }
+        else if (snake.is_shrink_time)
+        {
+            snake.shrink();
         }
         snake.update();
 
