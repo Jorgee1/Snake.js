@@ -1,7 +1,11 @@
-# Snake.js
+# snake-js
 
-Snake implementation in Javascript.
+Snake game implementation in Javascript.
 
-Movements is done with the W S A D keys
+## Instructions
 
-Don't let the head touch the body,
+Movements is done with the W S A D keys.
+
+Eat the yellow dot to grow.
+
+Don't let the head touch the body.
