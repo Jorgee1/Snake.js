@@ -177,14 +177,14 @@ class Snake
         ];
         this.color = color;
 
-        this.state = -1;
-
+        this.idle = -1;
         this.up = 0;
         this.down = 1;
         this.left = 2;
         this.right = 3;
 
-        this.direction = 0;
+        this.state = this.idle;
+
         this.is_grow_time = false;
         this.is_shrink_time = false;
     }
@@ -316,7 +316,6 @@ food.respawn(screen.h, screen.w);
 function loop(current_frame)
 {
     // Check Input
-
     if (!input.is_locked())
     {
         if (input.keys[input.left])
@@ -380,27 +379,24 @@ function loop(current_frame)
         snake.tail[0].y = screen.h - (snake.tail[0].h + snake.padding);
     }
 
-    
+    // Update snake
     var frame_delta = current_frame - reference_frame;
     if (frame_delta > frame_skip)
     {
-
         switch(snake.state){
-            case 0: snake.move_up();    break;
-            case 1: snake.move_down();  break;
-            case 2: snake.move_left();  break;
-            case 3: snake.move_right(); break;
-            case -1: break;
+            case snake.up: snake.move_up(); break;
+            case snake.down: snake.move_down(); break;
+            case snake.left: snake.move_left(); break;
+            case snake.right: snake.move_right(); break;
+            case snake.idle: break;
         }
     
         if (input.is_locked)
         {
             input.lock = false;
         }
-        reference_frame = current_frame;
-
-        // Update objects
         snake.update();
+        reference_frame = current_frame;
     }
 
 
