@@ -1,6 +1,6 @@
-# snake-js
+# Snake-js
 
-Snake game implementation in Javascript.
+Implementation of the snake game in Javascript.
 
 ![Alt Text](https://media.giphy.com/media/dMQGVENt3zGGKYVkEb/giphy.gif)
 
