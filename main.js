@@ -7,6 +7,16 @@ class Rect
         this.h = h;
         this.w = w;
     }
+
+    toString()
+    {
+        return {
+            x: this.x,
+            y: this.y,
+            h: this.h,
+            w: this.w
+        };
+    }
 }
 
 class Point
@@ -251,13 +261,7 @@ class Snake
 
         if (this.is_grow_time)
         {
-            var temp_body = new Rect(
-                this.position.x,
-                this.position.y,
-                this.position.h,
-                this.position.w
-            );
-            this.tail.push(temp_body);
+            this.tail.unshift(new Rect());
             this.tail_size += 1;
             this.is_grow_time = false;
         }
@@ -282,9 +286,13 @@ class Snake
         {
             this.tail[i].x = this.tail[i+1].x;
             this.tail[i].y = this.tail[i+1].y;
+            this.tail[i].h = this.tail[i+1].h;
+            this.tail[i].w = this.tail[i+1].w;
         }
         this.tail[this.tail_size - 1].x = this.position.x;
         this.tail[this.tail_size - 1].y = this.position.y;
+        this.tail[this.tail_size - 1].h = this.position.h;
+        this.tail[this.tail_size - 1].w = this.position.w;
 
         this.speed.x = 0;
         this.speed.y = 0;
@@ -294,7 +302,7 @@ class Snake
     {
         context.fillStyle = this.color;
 
-        for (var i = this.tail_size - 1; i >= 0; i--)
+        for (var i = 0; i < this.tail_size; i++)
         {
             context.fillRect(
                 this.tail[i].x,
@@ -378,11 +386,18 @@ function loop(current_frame)
         snake.tail[snake.tail_size - 1].x = snake.position.x;
     }
 
+    if (future_head.y + future_head.h + snake.padding > screen.h)
+    {
+        snake.position.y = snake.padding;
+        snake.tail[snake.tail_size - 1].y = snake.position.y;
+    }
+    else if (future_head.y - snake.padding < 0)
+    {
+        snake.position.y = screen.h - (snake.position.h + snake.padding);
+        snake.tail[snake.tail_size - 1].y = snake.position.y;
+    }
+
     
-
-
-
-    // Update objects
     var frame_delta = current_frame - reference_frame;
     if (frame_delta > frame_skip)
     {
@@ -400,14 +415,13 @@ function loop(current_frame)
             input.lock = false;
         }
         reference_frame = current_frame;
-    }
-    else
-    {
-        snake.speed.x = 0;
-        snake.speed.y = 0;
+
+        // Update objects
+        snake.update();
     }
 
-    snake.update();
+
+
     // Render
     screen.clear();
 
