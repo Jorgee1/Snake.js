@@ -6,7 +6,7 @@ Implementation of the snake game in Javascript.
 
 ## Instructions
 
-Movements is done with the W S A D keys.
+Movement: W S A D
 
 Eat the yellow dot to grow.
 
