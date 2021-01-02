@@ -164,21 +164,15 @@ class Snake
     {
         this.padding = 3; // important for colition detection
 
-        this.position = new Rect(
-            x + this.padding,
-            y + this.padding,
-            size - this.padding * 2,
-            size - this.padding * 2
-        );
         this.speed = new Point();
         this.speed_max = new Point(size, size);
-        this.tail_size = 1;
+
         this.tail = [
             new Rect(
-                this.position.x,
-                this.position.y,
-                this.position.h,
-                this.position.w
+                x + this.padding,
+                y + this.padding,
+                size - this.padding * 2,
+                size - this.padding * 2
             )
         ];
         this.color = color;
@@ -198,10 +192,10 @@ class Snake
     get_future_head()
     {
         return new Rect(
-            this.position.x + this.speed.x,
-            this.position.y + this.speed.y,
-            this.position.h,
-            this.position.w
+            this.tail[0].x + this.speed.x,
+            this.tail[0].y + this.speed.y,
+            this.tail[0].h,
+            this.tail[0].w
         );
     }
 
@@ -258,41 +252,34 @@ class Snake
 
     update()
     {
-
         if (this.is_grow_time)
         {
-            this.tail.unshift(new Rect());
-            this.tail_size += 1;
+            this.tail.push(new Rect());
             this.is_grow_time = false;
         }
         else if (this.is_shrink_time)
         {
-            this.tail_size = 1;
             this.tail = [
                 new Rect(
-                    this.position.x,
-                    this.position.y,
-                    this.position.h,
-                    this.position.w
+                    this.tail[0].x,
+                    this.tail[0].y,
+                    this.tail[0].h,
+                    this.tail[0].w
                 )
             ];
             this.is_shrink_time = false;
         }
 
-        this.position.x += this.speed.x;
-        this.position.y += this.speed.y;
-
-        for (var i = 0; i < this.tail_size - 1; i++)
+        for (var i = this.tail.length - 1; i > 0; i--)
         {
-            this.tail[i].x = this.tail[i+1].x;
-            this.tail[i].y = this.tail[i+1].y;
-            this.tail[i].h = this.tail[i+1].h;
-            this.tail[i].w = this.tail[i+1].w;
+            this.tail[i].x = this.tail[i-1].x;
+            this.tail[i].y = this.tail[i-1].y;
+            this.tail[i].h = this.tail[i-1].h;
+            this.tail[i].w = this.tail[i-1].w;
         }
-        this.tail[this.tail_size - 1].x = this.position.x;
-        this.tail[this.tail_size - 1].y = this.position.y;
-        this.tail[this.tail_size - 1].h = this.position.h;
-        this.tail[this.tail_size - 1].w = this.position.w;
+
+        this.tail[0].x += this.speed.x;
+        this.tail[0].y += this.speed.y;
 
         this.speed.x = 0;
         this.speed.y = 0;
@@ -302,7 +289,7 @@ class Snake
     {
         context.fillStyle = this.color;
 
-        for (var i = 0; i < this.tail_size; i++)
+        for (var i = 0; i < this.tail.length; i++)
         {
             context.fillRect(
                 this.tail[i].x,
@@ -357,16 +344,16 @@ function loop(current_frame)
     // Colittion detection
 
     // Collition between food and head
-    if (check_rect_colition(snake.position, food.position))
+    if (check_rect_colition(snake.tail[0], food.position))
     {
         food.respawn(screen.h, screen.w);
         snake.is_grow_time = true;
     }
 
     // Collition between head and body
-    for (var i=0; i < snake.tail_size - 1; i++)
+    for (var i = 1; i < snake.tail.length; i++)
     {
-        if (check_rect_colition(snake.position, snake.tail[i]))
+        if (check_rect_colition(snake.tail[0], snake.tail[i]))
         {
             snake.is_shrink_time = true;
             break;
@@ -377,24 +364,20 @@ function loop(current_frame)
     var future_head = snake.get_future_head();
     if (future_head.x + future_head.w + snake.padding > screen.w)
     {
-        snake.position.x = snake.padding;
-        snake.tail[snake.tail_size - 1].x = snake.position.x;
+        snake.tail[0].x = snake.padding;
     }
     else if (future_head.x - snake.padding < 0)
     {
-        snake.position.x = screen.w - (snake.position.w + snake.padding);
-        snake.tail[snake.tail_size - 1].x = snake.position.x;
+        snake.tail[0].x = screen.w - (snake.tail[0].w + snake.padding);
     }
 
     if (future_head.y + future_head.h + snake.padding > screen.h)
     {
-        snake.position.y = snake.padding;
-        snake.tail[snake.tail_size - 1].y = snake.position.y;
+        snake.tail[0].y = snake.padding;
     }
     else if (future_head.y - snake.padding < 0)
     {
-        snake.position.y = screen.h - (snake.position.h + snake.padding);
-        snake.tail[snake.tail_size - 1].y = snake.position.y;
+        snake.tail[0].y = screen.h - (snake.tail[0].h + snake.padding);
     }
 
     
